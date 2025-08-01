@@ -1,0 +1,54 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+
+# Load data
+data = pd.read_csv("data/marketing_data.csv")
+
+# Basic overview
+print("\n--- Dataset Overview ---")
+print(data.head())
+print("\nSummary:\n", data.describe())
+
+# Correlation between Ad Spend and Sales
+corr = data['Ad_Spend'].corr(data['Sales'])
+print(f"\n🔍 Correlation between Ad Spend and Sales: {corr:.2f}")
+
+# Platform-level insights
+platform_stats = data.groupby("Platform")[["Ad_Spend", "Sales"]].mean()
+platform_stats["ROI"] = platform_stats["Sales"] / platform_stats["Ad_Spend"]
+print("\n📊 Average ROI by Platform:\n", platform_stats.sort_values("ROI", ascending=False))
+
+# Segment-level insights
+segment_stats = data.groupby("Segment")[["Ad_Spend", "Sales"]].mean()
+segment_stats["ROI"] = segment_stats["Sales"] / segment_stats["Ad_Spend"]
+print("\n📊 Average ROI by Customer Segment:\n", segment_stats.sort_values("ROI", ascending=False))
+
+# Actionable Recommendations
+print("\n💡 Actionable Insights:")
+top_platform = platform_stats["ROI"].idxmax()
+top_segment = segment_stats["ROI"].idxmax()
+
+print(f"- Focus marketing budget more on **{top_platform}**, which has the highest ROI.")
+print(f"- Target **{top_segment}** segment to maximize conversion efficiency.")
+if corr < 0.3:
+    print("- Ad Spend and Sales have weak correlation: consider content quality or targeting instead of increasing budget.")
+else:
+    print("- Positive correlation found: investing more in ads may increase sales.")
+
+# Visualizations
+sns.set(style="whitegrid")
+plt.figure(figsize=(10, 6))
+sns.barplot(x=platform_stats.index, y=platform_stats["ROI"])
+plt.title("Average ROI by Platform")
+plt.ylabel("ROI (Sales / Ad Spend)")
+plt.savefig("roi_by_platform.png")
+plt.close()
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=data, x="Ad_Spend", y="Sales", hue="Platform")
+plt.title("Ad Spend vs Sales by Platform")
+plt.savefig("ad_spend_vs_sales.png")
+plt.close()
+print("\n📁 Plots saved as 'roi_by_platform.png' and 'ad_spend_vs_sales.png'")
